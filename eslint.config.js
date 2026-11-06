@@ -13,6 +13,11 @@ export default defineConfig([
     extends: [reactHooks.configs.flat.recommended],
   },
   {
+    // 部署用的腳本（Render 用 node 直接執行，不經過 TypeScript）
+    files: ['backend/scripts/**/*.mjs'],
+    languageOptions: { globals: { console: 'readonly', process: 'readonly' } },
+  },
+  {
     rules: {
       // 用底線開頭的參數或變數，代表「刻意不用」，例如 Express 錯誤處理的 _next。
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],

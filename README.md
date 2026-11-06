@@ -36,6 +36,8 @@
 | `backend/db/migrations/` | 資料庫結構的 Migration（`NNN_名稱.sql`，只新增） |
 | `backend/db/seeds/` | 種子資料（`NN_名稱.sql`，Day 10 的 T1 建立） |
 | `backend/test/` | API 測試（Vitest） |
+| `backend/scripts/` | Staging 的打包與啟動（Render 的 Build／Start Command，見 `docs/STAGING.md`） |
+| `postman/` | Postman Collection：Day 10、Day 11 的請求範例（用法見 `postman/README.md`） |
 | `docker-compose.yml` | 本機的練習資料庫（PostgreSQL 17） |
 | `.env.example` | 環境變數範本 |
 
@@ -99,6 +101,7 @@ npm run dev:web            # 啟動前端：http://localhost:3000
 - 登入頁（http://localhost:3000/login）的「測試帳號快速登入」列出資料庫裡的帳號，點一個人就以他的身分登入，不用密碼。只在開發環境與 Staging 開啟，正式環境會關閉。
 - 六個測試帳號照 `docs/test-accounts.md`，Day 10 的 T1 用種子資料建立；在那之前，登入頁會顯示「還沒有任何帳號」。
 - 在 Postman 帶登入身分：送 `POST http://localhost:4000/api/auth/test-login`，body 是 `{"email":"chen.zhiming@qingguang.example","cookie":false}`，回應裡的 `token` 放進之後請求的 Header：`Authorization: Bearer <token>`。登出（`POST /api/auth/logout`）之後，這個 Token 就失效。Token 和密碼一樣，不要貼到文件或群組。
+- Day 10、Day 11 的 Postman Collection 在 `postman/`：六個人的登入請求已經寫好，Token 會自動存成變數，用法見 `postman/README.md`。
 
 ## 檢查
 
@@ -107,6 +110,13 @@ make check
 ```
 
 依序跑：票務檢查（ticket-lint）→ 程式風格（`npm run lint`）→ 型別（`npm run typecheck`）→ 測試（`npm test`）→ 正式版打包（`npm run build`），全部通過最後一行印 `[check] OK`。測試會連本機資料庫（自動建立並使用 `claims_test`，不動你的練習資料），所以要先 `docker compose up -d db`。
+
+## Staging（線上的測試環境）
+
+Staging 用 Render（網站）加 Neon（資料庫），每個人用自己的免費帳號。開通（Day 10 晚上，約 20 分鐘）、部署、回滾、Log、環境變數與備份，照 `docs/STAGING.md`。
+
+- Render 的 Build Command 是 `npm run staging:build`（安裝套件、打包），Start Command 是 `npm run staging:start`（執行 Migration、第一次放種子資料、啟動）。
+- 合併進 `stage` 不會自動部署，要在 Render 按 Manual Deploy。
 
 ## 常見錯誤
 

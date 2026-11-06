@@ -1,0 +1,1616 @@
+{
+  "info": {
+    "_postman_id": "00ee4417-efc2-4326-9d4f-164895e8e5ac",
+    "name": "核銷 Day 11（送出、主管審核、財務確認、權限）",
+    "description": "Day 11 的 Postman Collection：送出、核准、退回、確認核銷、修改草稿的請求範例，以及權限與狀態的檢查。\n\n用法見 Repo 的 postman/README.md。先送「00 登入」；建立草稿的請求會把單號存成 claimId、claimId2、wangClaimId、linClaimId，要改用你自己的單，就到 Collection 的 Variables 把單號換掉。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 登入",
+      "description": "先送這個資料夾：每個人一個請求（測試帳號快速登入，不用密碼），回應裡的 token 會自動存成 token_chen、token_huang…。\n\nbody 的 cookie 是 false：只回 Token、不設 Cookie，所以 Postman 的 Cookie jar 不會留下別人的身分；沒有帶 Authorization 的請求就是「沒有登入」。\n\n換到 Staging（右上角的環境選 staging）要重送一次這個資料夾：本機的 Token 在 Staging 不能用。",
+      "item": [
+        {
+          "name": "陳志明 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_chen', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chen.zhiming@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "陳志明：業務，直屬主管是王建宏。\n\n預期：200，回應有 token，自動存成 {{token_chen}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "黃小芳 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_huang', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"huang.xiaofang@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "黃小芳：業務，直屬主管是王建宏。\n\n預期：200，回應有 token，自動存成 {{token_huang}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "王建宏 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_wang', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wang.jianhong@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "王建宏：業務部經理（陳志明、黃小芳的直屬主管），直屬主管是周文彥。\n\n預期：200，回應有 token，自動存成 {{token_wang}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "林佳慧 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_lin', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lin.jiahui@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "林佳慧：財務專員（小林），直屬主管是張惠如。\n\n預期：200，回應有 token，自動存成 {{token_lin}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "張惠如 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_zhang', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"zhang.huiru@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "張惠如：財務主管（林佳慧的直屬主管），直屬主管是周文彥。\n\n預期：200，回應有 token，自動存成 {{token_zhang}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "周文彥 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_zhou', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"zhou.wenyan@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "周文彥：總經理，沒有直屬主管。\n\n預期：200，回應有 token，自動存成 {{token_zhou}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        }
+      ]
+    },
+    {
+      "name": "A 送出",
+      "description": "任務 A：送出、重複送出、用 PATCH 改狀態。",
+      "item": [
+        {
+          "name": "A-0 陳志明建立第一張草稿",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 或 200：草稿建立成功\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "if (claim && claim.id !== undefined) pm.collectionVariables.set('claimId', claim.id);",
+                  "pm.test('合計由伺服器計算：1660', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：201（或 200）：建立一張草稿，合計 1660（伺服器計算）。回應的單號自動存成 {{claimId}}。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：第一張\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A-0 陳志明建立第二張草稿",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 或 200：草稿建立成功\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "if (claim && claim.id !== undefined) pm.collectionVariables.set('claimId2', claim.id);",
+                  "pm.test('合計由伺服器計算：1660', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：201（或 200）：建立一張草稿，合計 1660（伺服器計算）。回應的單號自動存成 {{claimId2}}。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：第二張\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A-1 陳志明送出第一張（預期 200）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：送出成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 pending_review', () => pm.expect(claim.status).to.eql('pending_review'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "submit"
+              ]
+            },
+            "description": "預期：200：狀態變成待審核（pending_review），審核紀錄多一筆送出。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A-2 再送一次（預期 409）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"409：已經送出的單不能再送\", () => pm.expect(pm.response.code).to.be.oneOf([409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "submit"
+              ]
+            },
+            "description": "預期：409「這張單已經被處理過」：審核紀錄沒有增加（到詳細頁或用 SQL 查 claim_logs 確認）。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A-3 陳志明用 PATCH 把第二張的狀態改成 settled（預期 400 或被忽略）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400，或狀態被忽略', () => { if (pm.response.code === 400) return; pm.expect(pm.response.code).to.eql(200); const body = pm.response.json(); pm.expect(((body && body.claim) || body).status).to.eql('draft'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId2}}"
+              ]
+            },
+            "description": "預期：400（拒絕），或 200 但狀態欄位被忽略：狀態仍是草稿，審核紀錄沒有增加（A-4 再查一次）。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"settled\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "A-4 陳志明查看第二張：仍是草稿",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 draft', () => pm.expect(claim.status).to.eql('draft'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId2}}"
+              ]
+            },
+            "description": "預期：200：狀態仍是草稿（draft）。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "A-5 陳志明送出第二張（給任務 B 用）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：送出成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 pending_review', () => pm.expect(claim.status).to.eql('pending_review'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId2}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId2}}",
+                "submit"
+              ]
+            },
+            "description": "預期：200：狀態變成待審核。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B 主管審核",
+      "description": "任務 B：直屬主管核准與退回；不是直屬主管、審自己的單、重複核准、沒填原因都要被擋下。",
+      "item": [
+        {
+          "name": "B-1 王建宏核准第一張（預期 200）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：核准成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 pending_finance', () => pm.expect(claim.status).to.eql('pending_finance'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "approve"
+              ]
+            },
+            "description": "預期：200：狀態變成待財務確認（pending_finance），審核紀錄多一筆王建宏的核准。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-2 王建宏再核准一次（預期 409）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"409：已經核准過\", () => pm.expect(pm.response.code).to.be.oneOf([409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "approve"
+              ]
+            },
+            "description": "預期：409：審核紀錄只有一筆核准。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-3 張惠如核准陳志明的第二張（預期 403）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403：不是直屬主管\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_zhang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId2}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId2}}",
+                "approve"
+              ]
+            },
+            "description": "預期：403：張惠如不是陳志明的直屬主管；狀態仍是待審核，紀錄沒有增加。\n\n身分：張惠如（Header 帶 {{token_zhang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-4 王建宏建立自己的單",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 或 200：草稿建立成功\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "if (claim && claim.id !== undefined) pm.collectionVariables.set('wangClaimId', claim.id);",
+                  "pm.test('合計由伺服器計算：1660', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：201（或 200）：建立一張草稿，合計 1660（伺服器計算）。回應的單號自動存成 {{wangClaimId}}。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：王建宏自己的單\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-5 王建宏送出自己的單",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：送出成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 pending_review', () => pm.expect(claim.status).to.eql('pending_review'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{wangClaimId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{wangClaimId}}",
+                "submit"
+              ]
+            },
+            "description": "預期：200：待審核，要由他的直屬主管周文彥審。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-6 王建宏核准自己的單（預期 403）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403：不能審自己的單\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{wangClaimId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{wangClaimId}}",
+                "approve"
+              ]
+            },
+            "description": "預期：403：不能核准自己的單；狀態不變。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-7 王建宏退回第二張，沒填原因（預期 400）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400：退回原因必填\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId2}}/return",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId2}}",
+                "return"
+              ]
+            },
+            "description": "預期：400「請填寫退回原因」：狀態仍是待審核，紀錄沒有增加。只打空格也要回 400。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "B-8 王建宏退回第二張，有填原因（預期 200）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：退回成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 returned', () => pm.expect(claim.status).to.eql('returned'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_wang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId2}}/return",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId2}}",
+                "return"
+              ]
+            },
+            "description": "預期：200：狀態變成退回（returned），審核紀錄有原因「客戶餐敘請寫客戶公司與人數」，陳志明看得到。\n\n身分：王建宏（Header 帶 {{token_wang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"客戶餐敘請寫客戶公司與人數\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "C 財務確認",
+      "description": "任務 C：財務確認核銷；業務不能確認、財務不能確認自己的單；已核銷的單不能再修改。",
+      "item": [
+        {
+          "name": "C-1 陳志明確認核銷自己的第一張（預期 403）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403：業務不能確認核銷\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "confirm"
+              ]
+            },
+            "description": "預期：403：只有財務可以確認核銷；狀態仍是待財務確認。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-2 林佳慧確認核銷第一張（預期 200）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：確認核銷成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 settled', () => pm.expect(claim.status).to.eql('settled'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_lin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}",
+                "confirm"
+              ]
+            },
+            "description": "預期：200：狀態變成已核銷（settled），記下核銷時間，審核紀錄多一筆確認。\n\n身分：林佳慧（Header 帶 {{token_lin}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-3 林佳慧建立自己的單",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 或 200：草稿建立成功\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "if (claim && claim.id !== undefined) pm.collectionVariables.set('linClaimId', claim.id);",
+                  "pm.test('合計由伺服器計算：1660', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_lin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：201（或 200）：建立一張草稿，合計 1660（伺服器計算）。回應的單號自動存成 {{linClaimId}}。\n\n身分：林佳慧（Header 帶 {{token_lin}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：林佳慧自己的單\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-4 林佳慧送出自己的單",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：送出成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 pending_review', () => pm.expect(claim.status).to.eql('pending_review'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_lin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{linClaimId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{linClaimId}}",
+                "submit"
+              ]
+            },
+            "description": "預期：200：待審核，由她的直屬主管張惠如審。\n\n身分：林佳慧（Header 帶 {{token_lin}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-5 張惠如核准林佳慧的單（她是直屬主管，預期 200）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：直屬主管核准成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 pending_finance', () => pm.expect(claim.status).to.eql('pending_finance'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_zhang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{linClaimId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{linClaimId}}",
+                "approve"
+              ]
+            },
+            "description": "預期：200：待財務確認。有權限的人照樣成功（確認沒有擋錯人）。\n\n身分：張惠如（Header 帶 {{token_zhang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-6 林佳慧確認自己的單（預期 403）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403：不能確認自己的單\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_lin}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{linClaimId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{linClaimId}}",
+                "confirm"
+              ]
+            },
+            "description": "預期：403：財務不能確認自己的單，要由另一位財務（張惠如）確認；狀態不變。\n\n身分：林佳慧（Header 帶 {{token_lin}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-7 陳志明修改已核銷的第一張（預期被擋下）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"被擋下：已核銷的單不能修改\", () => pm.expect(pm.response.code).to.be.oneOf([400,403,409]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：被擋下（參考版本回 409「這張單已經核銷，不能修改」；400 或 403 也算擋下），內容不變（C-8 再查一次）。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"核銷之後改事由\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "C-8 陳志明查看第一張：已核銷，事由沒變",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 settled', () => pm.expect(claim.status).to.eql('settled'));",
+                  "pm.test('事由沒有被改', () => pm.expect(claim.title).to.eql('Postman 測試：第一張'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：200：狀態是已核銷，事由還是「Postman 測試：第一張」。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        }
+      ]
+    },
+    {
+      "name": "D 權限",
+      "description": "換網址看別人的單、沒有登入。",
+      "item": [
+        {
+          "name": "D-1 黃小芳查看陳志明的單（預期 403 或 404）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 或 404：看不到別人的單\", () => pm.expect(pm.response.code).to.be.oneOf([403,404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_huang}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：403 或 404：看不到別人的單，回應裡沒有那張單的內容。\n\n身分：黃小芳（Header 帶 {{token_huang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "D-2 沒有登入查看陳志明的單（預期 401）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401：沒有登入\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：401：沒有登入。\n\n身分：沒有登入（不帶 Authorization，也沒有 Cookie）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 台灣時間的今天與明天（費用日期不可以是未來的日期；本機或 Render 的時區都一樣）",
+          "const taipei = new Date(Date.now() + 8 * 60 * 60 * 1000);",
+          "pm.collectionVariables.set('today', taipei.toISOString().slice(0, 10));",
+          "pm.collectionVariables.set('tomorrow', new Date(taipei.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tomorrow",
+      "value": ""
+    },
+    {
+      "key": "token_chen",
+      "value": ""
+    },
+    {
+      "key": "token_huang",
+      "value": ""
+    },
+    {
+      "key": "token_wang",
+      "value": ""
+    },
+    {
+      "key": "token_lin",
+      "value": ""
+    },
+    {
+      "key": "token_zhang",
+      "value": ""
+    },
+    {
+      "key": "token_zhou",
+      "value": ""
+    },
+    {
+      "key": "claimId",
+      "value": ""
+    },
+    {
+      "key": "claimId2",
+      "value": ""
+    },
+    {
+      "key": "wangClaimId",
+      "value": ""
+    },
+    {
+      "key": "linClaimId",
+      "value": ""
+    }
+  ]
+}

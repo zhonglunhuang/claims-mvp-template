@@ -37,5 +37,7 @@
 
 - [../README.md](../README.md) — 本機啟動、資料庫指令、常見錯誤（上半部）。
 - [test-accounts.md](test-accounts.md) — 六個測試帳號（種子資料照這份建立）。
+- [STAGING.md](STAGING.md) — Staging（Render＋Neon）的開通、部署、回滾、Log 與備份。
+- [../postman/README.md](../postman/README.md) — Day 10、Day 11 的 Postman Collection 怎麼用。
 - [../backend/db/migrations/README.md](../backend/db/migrations/README.md) — Migration 的規則與執行方式。
 - [../backend/db/seeds/README.md](../backend/db/seeds/README.md) — 種子資料的規則與執行方式。

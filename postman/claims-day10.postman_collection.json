@@ -1,0 +1,882 @@
+{
+  "info": {
+    "_postman_id": "daa5040f-e773-4217-ace2-63b92444253a",
+    "name": "核銷 Day 10（T2 草稿、T3 我的報支單）",
+    "description": "Day 10 的 Postman Collection：六個身分的登入、T2（草稿的新增修改刪除）與 T3（我的報支單）的請求。\n\n用法見 Repo 的 postman/README.md。先送「00 登入」；baseUrl 預設 http://localhost:4000（改了 API_PORT 就改這個變數）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 登入",
+      "description": "先送這個資料夾：每個人一個請求（測試帳號快速登入，不用密碼），回應裡的 token 會自動存成 token_chen、token_huang…。\n\nbody 的 cookie 是 false：只回 Token、不設 Cookie，所以 Postman 的 Cookie jar 不會留下別人的身分；沒有帶 Authorization 的請求就是「沒有登入」。\n\n換到 Staging（右上角的環境選 staging）要重送一次這個資料夾：本機的 Token 在 Staging 不能用。",
+      "item": [
+        {
+          "name": "陳志明 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_chen', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chen.zhiming@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "陳志明：業務，直屬主管是王建宏。\n\n預期：200，回應有 token，自動存成 {{token_chen}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "黃小芳 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_huang', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"huang.xiaofang@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "黃小芳：業務，直屬主管是王建宏。\n\n預期：200，回應有 token，自動存成 {{token_huang}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "王建宏 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_wang', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wang.jianhong@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "王建宏：業務部經理（陳志明、黃小芳的直屬主管），直屬主管是周文彥。\n\n預期：200，回應有 token，自動存成 {{token_wang}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "林佳慧 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_lin', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"lin.jiahui@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "林佳慧：財務專員（小林），直屬主管是張惠如。\n\n預期：200，回應有 token，自動存成 {{token_lin}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "張惠如 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_zhang', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"zhang.huiru@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "張惠如：財務主管（林佳慧的直屬主管），直屬主管是周文彥。\n\n預期：200，回應有 token，自動存成 {{token_zhang}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "周文彥 登入",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：登入成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "pm.collectionVariables.set('token_zhou', pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"zhou.wenyan@qingguang.example\",\n  \"cookie\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/test-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "test-login"
+              ]
+            },
+            "description": "周文彥：總經理，沒有直屬主管。\n\n預期：200，回應有 token，自動存成 {{token_zhou}}。還沒有帳號（Day 10 的 T1 還沒放種子資料）時回 400「找不到這個測試帳號」。\n\n測試帳號快速登入只在開發環境與 Staging 開啟。Token 和密碼一樣，不要貼到文件、截圖或群組。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T2 草稿",
+      "description": "照 T2 的驗收條件：建立、修改時夾帶合計、查看；黃小芳改不到、刪不掉陳志明的草稿；金額 0、負數與明天的日期存不進去。",
+      "item": [
+        {
+          "name": "T2-1 陳志明建立草稿（380 元與 1,280 元）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 或 200：草稿建立成功\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "if (claim && claim.id !== undefined) pm.collectionVariables.set('claimId', claim.id);",
+                  "pm.test('合計由伺服器計算：1660', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：201（或 200）：建立一張草稿，合計 1660（伺服器計算）。回應的單號自動存成 {{claimId}}。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：客戶拜訪\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "T2-2 陳志明修改草稿，夾帶 total_amount 99（AC-02）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：修改成功\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('合計仍是 1660，不是 99', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：200：修改成功，但合計仍是 1660（請求裡的 total_amount 不理會，由伺服器依明細計算）。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：客戶拜訪\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ],\n  \"total_amount\": 99\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "T2-3 陳志明查看草稿",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：看得到自己的草稿\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 draft', () => pm.expect(claim.status).to.eql('draft'));",
+                  "pm.test('合計 1660', () => pm.expect(claim.total_amount).to.eql(1660));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：200：狀態是草稿（draft），合計 1660。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "T2-4 黃小芳修改陳志明的草稿（預期 403 或 404）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 或 404：改不到別人的草稿\", () => pm.expect(pm.response.code).to.be.oneOf([403,404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_huang}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：403 或 404：被擋下，草稿內容不變（T2-9 會再查一次）。\n\n身分：黃小芳（Header 帶 {{token_huang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"黃小芳改了這張單\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"拜訪客戶：內湖到新莊（計程車）\",\n      \"amount\": 380\n    },\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"餐費\",\n      \"description\": \"與客戶午餐（客戶 2 人）\",\n      \"amount\": 1280\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "T2-5 黃小芳刪除陳志明的草稿（預期 403 或 404）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 或 404：刪不掉別人的草稿\", () => pm.expect(pm.response.code).to.be.oneOf([403,404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_huang}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：403 或 404：被擋下，草稿還在（T2-9 會再查一次）。\n\n身分：黃小芳（Header 帶 {{token_huang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "T2-6 金額填 0（預期 400）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400：金額 0 存不進去\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：400：金額要大於 0，存不進去。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：客戶拜訪\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"金額填 0\",\n      \"amount\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "T2-7 金額填負數（預期 400）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400：負數存不進去\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：400：金額要大於 0，存不進去。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：客戶拜訪\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{today}}\",\n      \"category\": \"交通\",\n      \"description\": \"金額填負數\",\n      \"amount\": -380\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "T2-8 費用日期填明天（預期 400）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400：明天的日期存不進去\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：400：費用日期不可以是未來的日期，存不進去。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman 測試：客戶拜訪\",\n  \"items\": [\n    {\n      \"expense_date\": \"{{tomorrow}}\",\n      \"category\": \"交通\",\n      \"description\": \"日期填明天\",\n      \"amount\": 380\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "T2-9 陳志明再查一次：內容沒有被改掉",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：草稿還在\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const body = pm.response.json(); const claim = (body && body.claim) || body;",
+                  "pm.test('狀態是 draft', () => pm.expect(claim.status).to.eql('draft'));",
+                  "pm.test('合計仍是 1660', () => pm.expect(claim.total_amount).to.eql(1660));",
+                  "pm.test('事由沒有被改', () => pm.expect(claim.title).to.eql('Postman 測試：客戶拜訪'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：200：還是草稿，合計 1660，事由沒有被黃小芳改掉。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        }
+      ]
+    },
+    {
+      "name": "T3 我的報支單",
+      "description": "照 T3 的驗收條件：清單只有自己的單；沒有登入回 401；看不到別人的單。",
+      "item": [
+        {
+          "name": "T3-1 陳志明的「我的報支單」",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200：看得到自己的清單\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+                  "const list = pm.response.json(); const rows = Array.isArray(list) ? list : list.claims || [];",
+                  "pm.test('清單裡有 T2-1 建立的草稿', () => pm.expect(rows.map((row) => String(row.id))).to.include(String(pm.collectionVariables.get('claimId'))));",
+                  "pm.test('只有自己的單', () => rows.forEach((row) => { if (row.applicant_name !== undefined) pm.expect(row.applicant_name).to.eql('陳志明'); }));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_chen}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：200：清單裡有 T2-1 建立的那張單，而且只有陳志明自己的單。\n\n身分：陳志明（Header 帶 {{token_chen}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "T3-2 沒有登入的「我的報支單」（預期 401）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401：沒有登入\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims"
+              ]
+            },
+            "description": "預期：401：沒有登入。\n\n身分：沒有登入（不帶 Authorization，也沒有 Cookie）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        },
+        {
+          "name": "T3-3 黃小芳查看陳志明的單（預期 403 或 404）",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 或 404：看不到別人的單\", () => pm.expect(pm.response.code).to.be.oneOf([403,404]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_huang}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/claims/{{claimId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "claims",
+                "{{claimId}}"
+              ]
+            },
+            "description": "預期：403 或 404：看不到別人的單，回應裡沒有那張單的內容。\n\n身分：黃小芳（Header 帶 {{token_huang}}，先送過「00 登入」）。\n\n網址與欄位以你的 API 為準：你的 Agent 做的路徑或欄位名稱不一樣時，照你的改。"
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 台灣時間的今天與明天（費用日期不可以是未來的日期；本機或 Render 的時區都一樣）",
+          "const taipei = new Date(Date.now() + 8 * 60 * 60 * 1000);",
+          "pm.collectionVariables.set('today', taipei.toISOString().slice(0, 10));",
+          "pm.collectionVariables.set('tomorrow', new Date(taipei.getTime() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "today",
+      "value": ""
+    },
+    {
+      "key": "tomorrow",
+      "value": ""
+    },
+    {
+      "key": "token_chen",
+      "value": ""
+    },
+    {
+      "key": "token_huang",
+      "value": ""
+    },
+    {
+      "key": "token_wang",
+      "value": ""
+    },
+    {
+      "key": "token_lin",
+      "value": ""
+    },
+    {
+      "key": "token_zhang",
+      "value": ""
+    },
+    {
+      "key": "token_zhou",
+      "value": ""
+    },
+    {
+      "key": "claimId",
+      "value": ""
+    }
+  ]
+}

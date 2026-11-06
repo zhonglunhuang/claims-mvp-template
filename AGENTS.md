@@ -37,7 +37,9 @@ backend/                  產品程式碼：API、資料庫指令與測試
   db/migrations/          Migration：NNN_動作_對象.sql，只新增
   db/seeds/               種子資料：NN_名稱.sql，可以重複執行
   test/                   API 測試（Vitest＋supertest），共用 helpers.ts
-docs/                     SPEC、測試帳號（test-accounts.md）、框架文件
+  scripts/                Staging 的打包與啟動（npm run staging:build／staging:start，Render 執行）
+postman/                  Postman Collection（Day 10、Day 11），用法見 postman/README.md
+docs/                     SPEC、測試帳號（test-accounts.md）、Staging 的開通與操作（STAGING.md）、框架文件
 ```
 
 新功能照現有的範例長：API 照 `backend/src/auth/routes.ts`，測試照 `backend/test/auth.test.ts`，頁面照 `frontend/src/pages/Login.tsx`。
@@ -217,6 +219,8 @@ docs/                     SPEC、測試帳號（test-accounts.md）、框架文�
 - **部署時自動做的事**：執行還沒跑過的 Migration；資料庫還沒有任何帳號時放入種子資料。
 - **回滾**：回到上一個版本的程式；Migration 只新增，所以回滾不用動資料庫。
 - **確認**：健康檢查 `/api/health` 的 `status`、`database` 都是 `ok`，`version` 是這次部署的版本。
+- **設定與步驟**：Render 的 Build Command 是 `npm run staging:build`、Start Command 是 `npm run staging:start`；
+  開通、部署、回滾、Log 與備份的位置見 `docs/STAGING.md`。新增環境變數時寫進 `.env.example`，並在 PR 描述提醒部署前要設定。
 
 ## 更多文件
 
