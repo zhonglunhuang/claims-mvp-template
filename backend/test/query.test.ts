@@ -3,7 +3,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 import { checkQuery, prepareReadOnlyRole, READONLY_ROLE, runReadOnly } from '../db/query.js';
 import { REPO_ROOT } from '../src/config.js';
-import { createDb } from '../src/db.js';
+import { createDb, withDatabaseName, type Db } from '../src/db.js';
 import { closeTestDb, createUser, resetTestDb, testDb } from './helpers.js';
 
 beforeEach(resetTestDb);
@@ -131,6 +131,39 @@ describe('第二、三層：用只能讀的帳號、在唯讀交易裡執行（�
   });
 });
 
+describe('兩個資料庫同時準備只能讀的帳號（例如 npm test 與 npm run db:query 一起跑）', () => {
+  // 帳號是整台資料庫主機共用的；排隊用的鎖只管同一個資料庫，所以另外開一個資料庫來模擬 claims 與 claims_test
+  const OTHER_DATABASE = 'claims_test_query';
+  let other: Db;
+
+  beforeAll(async () => {
+    await testDb().query(`DROP DATABASE IF EXISTS ${OTHER_DATABASE} WITH (FORCE)`);
+    await testDb().query(`CREATE DATABASE ${OTHER_DATABASE}`);
+    other = createDb(withDatabaseName(inject('testDatabaseUrl'), OTHER_DATABASE));
+  });
+
+  afterAll(async () => {
+    await other?.close();
+    await testDb().query(`DROP DATABASE IF EXISTS ${OTHER_DATABASE} WITH (FORCE)`);
+  });
+
+  it('帳號要重新設定時，同時執行也全部成功，最後設定正確', async () => {
+    const baseUrl = inject('testDatabaseUrl');
+    const otherUrl = withDatabaseName(baseUrl, OTHER_DATABASE);
+    // 讓帳號變成「要重新設定」的狀態，每一次呼叫都會去改帳號
+    await testDb().query(`ALTER ROLE ${READONLY_ROLE} NOLOGIN`);
+    const runs = Array.from({ length: 12 }, (_value, i) =>
+      i % 2 === 0 ? prepareReadOnlyRole(testDb(), baseUrl) : prepareReadOnlyRole(other, otherUrl),
+    );
+    const results = await Promise.allSettled(runs);
+    expect(results.filter((result) => result.status === 'rejected')).toEqual([]);
+
+    const readOnlyUrl = await prepareReadOnlyRole(testDb(), baseUrl);
+    const result = await runReadOnly(readOnlyUrl, 'SELECT current_user AS who');
+    expect(result.rows).toEqual([{ who: READONLY_ROLE }]);
+  });
+});
+
 describe('npm run db:query', () => {
   it('查得到資料，印成表格與列數', async () => {
     await createUser({ name: '陳志明', email: 'chen@test.example' });
@@ -157,6 +190,12 @@ describe('npm run db:query', () => {
     expect(status).toBe(1);
     expect(output).toBe('[query] 錯誤：cannot execute SELECT in a read-only transaction（db:query 只能查、不能改）\n');
     expect(await userCount()).toBe(1);
+  });
+
+  it(`用只能讀的帳號 ${READONLY_ROLE} 執行，不是 DATABASE_URL 的帳號`, () => {
+    const { output, status } = dbQuery('SELECT current_user;');
+    expect(status).toBe(0);
+    expect(output.split('\n')).toEqual([' current_user', '-----------------', ` ${READONLY_ROLE}`, '（1 列）', '']);
   });
 
   it('資料表不存在：錯誤原文照印', () => {

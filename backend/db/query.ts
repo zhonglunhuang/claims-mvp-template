@@ -108,18 +108,60 @@ export function checkQuery(sql: string): string | undefined {
 
 // ── 第二、三層：只能讀的帳號、唯讀的交易 ──
 
-/**
- * 準備只能讀的帳號 claims_readonly（已經有了就把設定改回該有的樣子），回傳用它連線的網址。
- * - 只有讀取資料的權限（pg_read_all_data）：不是管理員，不能建立帳號或資料庫，也不能執行主機上的程式。
- * - 預設就是唯讀模式（default_transaction_read_only）。
- * - 密碼和 DATABASE_URL 的帳號相同：不用多保管一組密碼，拿到它的人也不會比原本的帳號多任何權限。
- */
-export async function prepareReadOnlyRole(db: Db, databaseUrl: string): Promise<string> {
-  const url = new URL(databaseUrl);
-  const password = decodeURIComponent(url.password);
+/** 連線的帳號設定被別的連線同時改到時，資料庫回的錯誤代碼：等一下再試一次就好。 */
+const RETRYABLE_ROLE_ERRORS = new Set([
+  'XX000', // tuple concurrently updated：兩個資料庫（例如 claims 與 claims_test）同時改同一個帳號
+  '23505', // 同時建立同一個帳號（unique violation）
+  '42710', // 同時建立同一個帳號（role already exists）
+  '40001',
+  '40P01',
+]);
+const ROLE_SETUP_ATTEMPTS = 6;
+
+function errorCode(err: unknown): unknown {
+  return typeof err === 'object' && err !== null && 'code' in err ? err.code : undefined;
+}
+
+/** 帳號已經是該有的樣子：可以登入、不是管理員、預設唯讀、只有讀取資料的權限。只讀系統表，不改任何東西。 */
+async function readOnlyRoleIsReady(db: Db): Promise<boolean> {
+  const { rows } = await db.query<{ ready: boolean }>(
+    `SELECT r.rolcanlogin
+            AND NOT r.rolsuper AND NOT r.rolcreatedb AND NOT r.rolcreaterole
+            AND NOT r.rolreplication AND NOT r.rolbypassrls
+            AND EXISTS (
+              SELECT 1 FROM pg_db_role_setting s
+               WHERE s.setrole = r.oid AND s.setdatabase = 0
+                 AND 'default_transaction_read_only=on' = ANY (s.setconfig))
+            AND ARRAY(
+              SELECT g.rolname::text FROM pg_auth_members m JOIN pg_roles g ON g.oid = m.roleid
+               WHERE m.member = r.oid ORDER BY 1) = ARRAY['pg_read_all_data'] AS ready
+       FROM pg_roles r
+      WHERE r.rolname = $1`,
+    [READONLY_ROLE],
+  );
+  return rows[0]?.ready === true;
+}
+
+/** 用這個網址登入得了嗎（密碼對不對）。 */
+async function canLogIn(readOnlyUrl: string): Promise<boolean> {
+  const db = createDb(readOnlyUrl);
+  try {
+    await db.query('SELECT 1');
+    return true;
+  } catch (err) {
+    if (errorCode(err) === '28P01' || errorCode(err) === '28000') return false;
+    throw err;
+  } finally {
+    await db.close();
+  }
+}
+
+/** 建立或修正 claims_readonly 的設定。 */
+async function configureReadOnlyRole(db: Db, password: string): Promise<void> {
   const role = pg.escapeIdentifier(READONLY_ROLE);
   await db.tx(async (client) => {
-    // 同時執行好幾次 db:query 也只會建立一次
+    // 同一個資料庫同時執行好幾次 db:query 時排隊。這個鎖只管同一個資料庫，
+    // 不同資料庫同時改到這個帳號（tuple concurrently updated），由 prepareReadOnlyRole 重試。
     await client.query('SELECT pg_advisory_xact_lock($1)', [ROLE_LOCK_KEY]);
     const existing = await client.query('SELECT 1 FROM pg_roles WHERE rolname = $1', [READONLY_ROLE]);
     if (existing.rowCount === 0) await client.query(`CREATE ROLE ${role}`);
@@ -129,8 +171,34 @@ export async function prepareReadOnlyRole(db: Db, databaseUrl: string): Promise<
     await client.query(`ALTER ROLE ${role} SET default_transaction_read_only = on`);
     await client.query(`GRANT pg_read_all_data TO ${role}`);
   });
+}
+
+/**
+ * 準備只能讀的帳號 claims_readonly，回傳用它連線的網址。
+ * - 只有讀取資料的權限（pg_read_all_data）：不是管理員，不能建立帳號或資料庫，也不能執行主機上的程式。
+ * - 預設就是唯讀模式（default_transaction_read_only）。
+ * - 密碼和 DATABASE_URL 的帳號相同：不用多保管一組密碼，拿到它的人也不會比原本的帳號多任何權限。
+ * 已經準備好（設定正確、密碼登入得了）就不改任何東西，所以同時執行好幾次也不會互相干擾；
+ * 第一次建立或設定不對時才修正。帳號是整台資料庫主機共用的，npm test（claims_test）與
+ * npm run db:query（claims）同時修正時，資料庫可能回 tuple concurrently updated，稍等重試。
+ */
+export async function prepareReadOnlyRole(db: Db, databaseUrl: string): Promise<string> {
+  const url = new URL(databaseUrl);
+  const password = decodeURIComponent(url.password);
   url.username = READONLY_ROLE;
-  return url.toString();
+  const readOnlyUrl = url.toString();
+
+  if ((await readOnlyRoleIsReady(db)) && (await canLogIn(readOnlyUrl))) return readOnlyUrl;
+
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await configureReadOnlyRole(db, password);
+      return readOnlyUrl;
+    } catch (err) {
+      if (attempt >= ROLE_SETUP_ATTEMPTS || !RETRYABLE_ROLE_ERRORS.has(String(errorCode(err)))) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 25 * attempt + Math.random() * 75));
+    }
+  }
 }
 
 /** 用只能讀的帳號連線，在唯讀的交易裡執行一個查詢，最後一律 ROLLBACK。資料庫的錯誤照原樣往外丟。 */
