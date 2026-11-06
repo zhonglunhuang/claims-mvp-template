@@ -199,8 +199,9 @@ describe('npm run db:query', () => {
   });
 
   it('資料表不存在：錯誤原文照印', () => {
-    const { output, status } = dbQuery('SELECT * FROM claims;');
+    // 用一定不會建立的表名：claims 這些表 Day 10 的 T1 會建立，用它的話 T1 一做完這個測試就會變紅
+    const { output, status } = dbQuery('SELECT * FROM no_such_table;');
     expect(status).toBe(1);
-    expect(output).toContain('relation "claims" does not exist');
+    expect(output).toContain('relation "no_such_table" does not exist');
   });
 });
