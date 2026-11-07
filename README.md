@@ -123,7 +123,7 @@ Staging 用 Render（網站）加 Neon（資料庫），每個人用自己的免
 | 訊息裡的關鍵字 | 意思 | 怎麼辦 |
 |---|---|---|
 | `command not found`（例如 `docker`、`node`） | 電腦找不到這個工具 | 確認已經安裝；裝完要重開 Terminal |
-| `Cannot connect to the Docker daemon` | Container 工具沒有在執行 | 打開 Docker Desktop，等它啟動完成 |
+| `Cannot connect to the Docker daemon`、`failed to connect to the docker API` 或 `error during connect`（依 Docker 的版本與作業系統而不同） | Container 工具沒有在執行 | 打開 Docker Desktop，等它啟動完成 |
 | `ECONNREFUSED`，後面接著 `:5432` | 連不上資料庫：那個位址和埠沒有程式在接聽 | 用 `docker compose ps` 看資料庫有沒有在跑；沒有就啟動它，再重新啟動後端 |
 | 剛啟動資料庫就建立資料表，出現 `ECONNREFUSED` 或 `the database system is starting up` | 資料庫還在準備，還不能連線 | 等 10 秒，再執行一次 `npm run db:migrate` |
 | `port is already allocated`（啟動資料庫時） | 5432 埠已經被別的資料庫或 Container 佔用 | 用 `docker ps` 看是不是另一個 Container，是的話用 `docker stop 名稱` 停掉再啟動；不是的話，可能是電腦上另外裝的資料庫，請技術導師協助。不要用 `docker compose down -v` 重來，它會刪掉資料 |
