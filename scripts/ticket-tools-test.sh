@@ -124,8 +124,12 @@ WIN_BACKSLASH="C:$(tr / '\\' <<<"$GATE")"
 gate() {  # $1=要修改的檔案路徑，之後是給閘門的環境變數；印出閘門的訊息，結束代碼和閘門相同
   local file="$1"
   shift
-  # 和 Claude Code 一樣送 UTF-8 的 JSON，內容有中文
-  python3 -c 'import json, sys; sys.stdout.buffer.write(json.dumps({"tool_name": "Edit", "tool_input": {"file_path": sys.argv[1], "old_string": "送出", "new_string": "送出（處理中…）"}}, ensure_ascii=False).encode("utf-8"))' "$file" |
+  # 和 Claude Code 一樣送 UTF-8 的 JSON，內容有中文。
+  # 路徑從 stdin 交給 python3，不放在參數裡：Windows 的 Git Bash 交給原生程式（例如 Microsoft Store 的 Python）的參數，
+  # 只要看起來像 /tmp/… 這種路徑，就會先改寫成 C:/…/Temp/… 的寫法，和閘門的根目錄（Git Bash 看到的 /tmp/…）對不上，
+  # 「一般的路徑」那幾項會變成放行、測試失敗。stdin 的內容不會被改寫（Claude Code 也是從 stdin 傳給閘門）。
+  printf '%s' "$file" |
+    python3 -c 'import json, sys; p = sys.stdin.buffer.read().decode("utf-8"); sys.stdout.buffer.write(json.dumps({"tool_name": "Edit", "tool_input": {"file_path": p, "old_string": "送出", "new_string": "送出（處理中…）"}}, ensure_ascii=False).encode("utf-8"))' |
     env "$@" bash "$GATE/scripts/ticket-gate-hook.sh" 2>&1
 }
 

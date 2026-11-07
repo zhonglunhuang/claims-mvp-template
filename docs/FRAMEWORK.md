@@ -1,6 +1,6 @@
 # FRAMEWORK.md — Agent 協作框架（總覽 + 決策紀錄）
 
-> **框架版本：v4.2.2**（版號規則見 §2.9；此為單一事實來源，`scripts/agent-status.sh` 簡報會讀這裡）
+> **框架版本：v4.2.3**（版號規則見 §2.9；此為單一事實來源，`scripts/agent-status.sh` 簡報會讀這裡）
 >
 > 本檔記錄**協作框架本身**：角色入口怎麼設計、為什麼這樣設計、歷次變更。
 > 框架的變更由 `framework` 入口討論與落地（豁免功能票）；每次變更**必須**同時
@@ -98,6 +98,7 @@
 
 | 版號 | 日期 | 決策（改了什麼） | 原因（為什麼） |
 |------|------|------|------|
+| v4.2.3 | 2026-11-07 | `scripts/ticket-tools-test.sh` 的閘門測試改成從 stdin 把要修改的檔案路徑交給 python3（原本放在參數裡）。Windows 的 Git Bash（MSYS2）交給原生程式（例如 Microsoft Store 的 Python）的參數，只要看起來像 `/tmp/…` 這種路徑，就會先改寫成 Windows 的寫法（`C:/…/Temp/…`），和測試用的根目錄（Git Bash 看到的 `/tmp/…`）對不上：沒有開著的票時，「一般的路徑」與「Python 讀 pipe 用 cp950」兩項變成放行，`make ticket-lint`、`make check` 在 Windows 都會失敗。stdin 的內容不會被改寫；Claude Code 也是從 stdin 傳給閘門，所以閘門本身不用改。PATCH：只修測試，閘門與規則不變 | Windows 的學員從 Day 9 跑 `make check` 起每次都會失敗，閘門其實是好的。在 macOS 上用照 MSYS2 的規則改寫參數的 python3 替身重現：修正前 2 項失敗，修正後 18 項全過；拿修正後的測試跑 v4.2.2 之前的閘門，仍然抓到 4 項 |
 | v4.2.2 | 2026-11-07 | 閘門也比對 Windows 格式的路徑（Claude Code 在 Windows 傳 `C:\…` 格式，原本比對不到、默默放行）：`scripts/ticket-gate-hook.sh` 把開頭是磁碟機代號的路徑（`C:\…`、`C:/…`）換成 Git Bash 的寫法（`/c/…`）再比對，這種路徑比對時不分大小寫（Windows 的路徑本來就不分），其他路徑照舊；Claude Code 傳來的內容一律當成 UTF-8 讀（Windows 的 Python 讀 pipe 預設用系統的編碼，例如 cp950，內容有中文就讀不出來，一樣默默放行）。`scripts/ticket-tools-test.sh` 加上閘門的測試：沒有開著的票時，一般的路徑、`C:\…`、`C:/…`、大小寫不同、用 cp950 讀都擋下，docs 放行；有開發中的票就放行；沒有 python3 直接說清楚。PATCH：修正閘門的漏洞，規則不變 | Windows 的學員（Git Bash 加 Claude Code）沒有票也改得了 `frontend/`、`backend/`，閘門不擋也不提示：`ROOT` 來自 Git Bash 的 `pwd`（`/c/…`），和 Claude Code 傳來的寫法不同。macOS、Linux 沒有 C 槽，測試用 `TICKET_GATE_TEST_ROOT` 假裝 Repo 在 `/c/…`（只有測試會設） |
 | v4.2.1 | 2026-11-07 | `.claude/settings.json` 的 `deny` 預設加上 `Read(./.env)`：settings 預設擋 Agent 用讀檔工具讀 `.env`。只擋 `.env` 本身，不寫成 `Read(./.env.*)`，`.env.example` 照常可讀。PATCH：補一條預設權限，不改行為契約 | 課程與資安：學院 Day 9 講義「第一層：權限設定」教的就是這一條，模板要和教材一致；`.env` 放 Secrets，讀檔通常不會先問使用者，要靠 deny 擋住（Terminal 指令讀檔仍會跳確認，由人判斷） |
 | v4.2.0 | 2026-08-14 | **回港源專案 v4.3.0–v4.12.1 的通用框架改進**（去產品化後移植）：(1) **四個通用 skill**——`ui-design`（v4.3.0 通用 UI/UX 檢查清單＋v4.10.0 輸入元件一致性四規則；來源專案的 PreToolUse 閘門因畫面層路徑依專案而異，模板不帶 hook、SKILL 內留機制化備忘）、`ux-writing`（v4.4.0 繁中 UX Writing：心法／標點／盤古之白／範例庫＋v4.5.0「套用即揭露」；術語表去產品化為「由專案自己累積」的空表＋示範列）、`grilling`（v4.7.0 vendored，MIT © Matt Pocock；pm 開票前必跑）、`user-walkthrough`（v4.12.0 真人操作走查；接進 dev 出貨流程「綠燈後、回報前必過」）；(2) **pm 開票前先 grill**（v4.7.0）——需求一進來先用 Skill 工具啟動 grilling 逼問一輪，共識再收斂到四件事；(3) **票號改作者前綴**（v4.11.0）——`git config ticket.prefix` 每 clone 一次、流水號只在自己前綴裡遞增（撞號是取號與推送間的競爭條件，fetch 再勤也看不到彼此；作者前綴讓取號不需要與任何人協調）；舊制 `TICKET_PREFIX`-XXXX 凍結、lint 兩制並收；`new-ticket.sh` 同步帶入 **fetch 全部遠端分支**（v4.8.0，只掃整合分支會看不到別人 feature 分支上的票）；agent-status／ticket-gate 的票 glob 改前綴無關；(4) **票務工具自動化測試**（v4.12.1）——`scripts/ticket-tools-test.sh` 九測項（未設前綴要擋／同前綴遞增／號碼空間獨立／id×檔名不一致／id 重複且錯誤路徑不炸／舊制相容…）掛進 `make ticket-lint`，「守規則的工具自己也要有測試」。**不帶入**：v4.9.0（Django migration lint 與 line-messaging，stack/產品綁定）、v4.6.0 的 hook 本體（畫面層路徑產品綁定，降級為 SKILL 內備忘）、v4.8.0 的 commit 自動推送 hook（部署拓樸綁定）。模板內驗證：ticket-lint OK、ticket-tools-test 9/9 過。MINOR：新增能力，不破壞既有 | 使用者要求把源專案演進出的框架更新與 skills 同步上模板 repo；照 v4.1.0 建立的移植方法論——逐條對照決策紀錄，只移植通用能力、產品內容一律不帶，來歷保留標「源專案」 |
