@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 票務工具自動化測試（v4.12.1）：new-ticket.sh 的取號與 ticket-lint.sh 的守門。
+# 票務工具自動化測試（v4.12.1）：new-ticket.sh 的取號與 ticket-lint.sh 的守門；
+# 框架 v4.2.2 起也測 ticket-gate-hook.sh（無票不開發的閘門，含 Windows 格式的路徑）。
 #
 # 為什麼要有：v4.11.0 把票號改成作者前綴時，取號腳本與 lint 都只靠**手動跑幾次看輸出**
 # 驗證——而同一天就實際發生「讓號時檔名改了、frontmatter 的 id 忘了改」（源專案的一張票）與
@@ -100,6 +101,83 @@ updated: 2026-08-07
 ---
 EOF
 if run_lint | grep -q "OK"; then ok "舊制 <前綴>-XXXX 相容"; else err "舊制票被誤擋：$(run_lint | head -2)"; fi
+
+# ── 無票不開發的閘門（ticket-gate-hook.sh）────────────────────────────────
+# Windows 的 Claude Code 傳 C:\… 或 C:/… 格式的路徑，Repo 的根目錄卻是 Git Bash 的 /c/…：
+# 原本比對不到，沒有票也改得了產品程式碼（默默放行）。在暫存的複本測：產品目錄是 frontend、backend，一開始沒有票。
+# 閘門用 python3 讀 Claude Code 傳來的內容；沒有 python3 就讀不到、一律放行，這裡直接說清楚，不跑後面的測試。
+if ! python3 -c 'pass' >/dev/null 2>&1; then
+  err "找不到可以執行的 python3：閘門讀不到 Agent 要改哪個檔案，會默默放行。先安裝 python3（見 README「需要的工具」）"
+  exit 1
+fi
+GATE="$SANDBOX/gate"
+mkdir -p "$GATE/scripts" "$GATE/tickets"
+cp "$ROOT/scripts/ticket-gate-hook.sh" "$GATE/scripts/"
+{ grep -v '^PRODUCT_DIRS=' "$ROOT/scripts/framework-config.sh"; echo 'PRODUCT_DIRS=(frontend backend)'; } >"$GATE/scripts/framework-config.sh"
+GATE="$(cd "$GATE" && pwd)"
+# macOS、Linux 沒有 C 槽：假裝這個複本在 Windows 的 C 槽，Git Bash 看到的根目錄是 /c$GATE，
+# Claude Code 傳來的是 C:$GATE（斜線）或把斜線換成反斜線的寫法
+AS_WINDOWS="TICKET_GATE_TEST_ROOT=/c$GATE"
+WIN_SLASH="C:$GATE"
+WIN_BACKSLASH="C:$(tr / '\\' <<<"$GATE")"
+
+gate() {  # $1=要修改的檔案路徑，之後是給閘門的環境變數；印出閘門的訊息，結束代碼和閘門相同
+  local file="$1"
+  shift
+  # 和 Claude Code 一樣送 UTF-8 的 JSON，內容有中文
+  python3 -c 'import json, sys; sys.stdout.buffer.write(json.dumps({"tool_name": "Edit", "tool_input": {"file_path": sys.argv[1], "old_string": "送出", "new_string": "送出（處理中…）"}}, ensure_ascii=False).encode("utf-8"))' "$file" |
+    env "$@" bash "$GATE/scripts/ticket-gate-hook.sh" 2>&1
+}
+
+blocked() {  # $1=說明 $2=路徑 之後是環境變數
+  local what="$1" file="$2" out code
+  shift 2
+  out="$(gate "$file" "$@")"
+  code=$?
+  if [ "$code" -eq 2 ] && grep -q '^\[ticket-gate\]' <<<"$out"; then
+    ok "閘門擋下：${what}"
+  else
+    err "閘門沒有擋下：${what}（結束代碼 ${code}）：${file}"
+  fi
+}
+
+allowed() {  # $1=說明 $2=路徑 之後是環境變數
+  local what="$1" file="$2" out code
+  shift 2
+  out="$(gate "$file" "$@")"
+  code=$?
+  if [ "$code" -eq 0 ]; then
+    ok "閘門放行：${what}"
+  else
+    err "閘門不應該擋：${what}（結束代碼 ${code}）：$(head -n 1 <<<"$out")"
+  fi
+}
+
+# 9) 沒有開著的票：產品程式碼一律擋下（一般的路徑、Windows 的兩種寫法、大小寫不同），docs 照常放行
+blocked "產品程式碼（一般的路徑）" "$GATE/frontend/src/App.tsx"
+blocked "產品程式碼（Windows 的 C:\\…）" "$WIN_BACKSLASH\\frontend\\src\\App.tsx" "$AS_WINDOWS"
+blocked "產品程式碼（Windows 的 C:/…）" "$WIN_SLASH/backend/src/app.ts" "$AS_WINDOWS"
+blocked "產品程式碼（Windows 的路徑，大小寫不同）" "$(tr '[:lower:]' '[:upper:]' <<<"$WIN_BACKSLASH")\\FRONTEND\\src\\App.tsx" "$AS_WINDOWS"
+# Windows 的 Python 讀 pipe 預設用系統的編碼：用 cp950 讀 UTF-8 的中文會失敗，閘門以前就默默放行
+blocked "產品程式碼（Python 讀 pipe 用 cp950，像 Windows）" "$GATE/frontend/src/App.tsx" PYTHONIOENCODING=cp950
+allowed "docs（一般的路徑）" "$GATE/docs/SPEC.md"
+allowed "docs（Windows 的路徑）" "$WIN_BACKSLASH\\docs\\SPEC.md" "$AS_WINDOWS"
+
+# 10) 有一張開發中的票：產品程式碼放行
+cat > "$GATE/tickets/TESTA-01-閘門放行.md" <<'EOF'
+---
+id: TESTA-01
+title: 閘門放行
+status: 開發中
+roles: [行政]
+owner: test
+spec:
+created: 2026-11-07
+updated: 2026-11-07
+---
+EOF
+allowed "有開發中的票時的產品程式碼（一般的路徑）" "$GATE/frontend/src/App.tsx"
+allowed "有開發中的票時的產品程式碼（Windows 的路徑）" "$WIN_BACKSLASH\\frontend\\src\\App.tsx" "$AS_WINDOWS"
 
 if [ "$fail" -eq 0 ]; then
   echo "[ticket-tools-test] 全部通過"

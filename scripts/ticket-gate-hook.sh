@@ -11,26 +11,43 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # 尚未設定產品目錄（初始化前）→ 閘門不擋
 [ ${#PRODUCT_DIRS[@]} -eq 0 ] && exit 0
 
-FILE_PATH=$(python3 -c '
-import json, sys
+# 取出要修改的檔案路徑，印成「格式＋路徑」：W＝原本是 Windows 的寫法，P＝其他。
+# - Windows 的 Claude Code 傳 C:\… 或 C:/… 格式的路徑，ROOT 卻是 Git Bash 的 /c/…：
+#   開頭是磁碟機代號的路徑，反斜線換成斜線、C:/ 換成 /c/，才比對得到。
+# - Claude Code 傳來的內容是 UTF-8；Windows 的 Python 讀 pipe 預設用系統的編碼（例如 cp950），
+#   內容有中文就讀不出來、閘門默默放行。所以一律當成 UTF-8 讀，也用 UTF-8 印。
+INPUT=$(python3 -c '
+import json, re, sys
 try:
-    d = json.load(sys.stdin)
+    d = json.load(sys.stdin.buffer)
 except Exception:
     sys.exit(0)
 ti = d.get("tool_input") or {}
-print(ti.get("file_path") or ti.get("notebook_path") or "")
+p = ti.get("file_path") or ti.get("notebook_path") or ""
+m = re.match(r"([A-Za-z]):[\\/]", p)
+if m:
+    p = "W/" + m.group(1).lower() + "/" + p[3:].replace("\\", "/")
+elif p:
+    p = "P" + p
+sys.stdout.buffer.write(p.encode("utf-8"))
 ' 2>/dev/null || true)
 
 # 拿不到路徑（非檔案類工具）→ 放行
-[ -z "$FILE_PATH" ] && exit 0
+[ -z "$INPUT" ] && exit 0
+FILE_PATH="${INPUT#?}"
+# Windows 的路徑不分大小寫（C:\Users\Amy 和 c:\users\amy 是同一個資料夾），比對時也不分；其他路徑照舊
+[ "${INPUT:0:1}" = W ] && shopt -s nocasematch
 
-# 只閘產品程式碼目錄；框架檔、docs、tickets、cache、scripts 一律放行
+# 只閘產品程式碼目錄；框架檔、docs、tickets、cache、scripts 一律放行。
+# TICKET_GATE_TEST_ROOT 只給 scripts/ticket-tools-test.sh 用：在 macOS、Linux 上假裝 Repo 在 Windows 的 /c/…
+MATCH_ROOT="${TICKET_GATE_TEST_ROOT:-$ROOT}"
 hit=0
 for d in "${PRODUCT_DIRS[@]}"; do
   case "$FILE_PATH" in
-    "$ROOT/$d"/*) hit=1; break ;;
+    "$MATCH_ROOT/$d"/*) hit=1; break ;;
   esac
 done
+shopt -u nocasematch
 [ "$hit" -eq 0 ] && exit 0
 
 # 紅燈救火豁免：使用者明確同意後 touch cache/hotfix-override（不進 git），
