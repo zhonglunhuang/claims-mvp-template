@@ -46,13 +46,22 @@
 在專案資料夾，一行一行打（不要整段貼上）：
 
 ```bash
-npm install                # 安裝套件
-cp .env.example .env       # 準備環境變數，再打開 .env 填值
-docker compose up -d db    # 用 Container 啟動練習資料庫（-d：在背景執行）
-npm run db:migrate         # 建立資料表
-npm run dev:api            # 啟動後端：http://localhost:4000
-npm run dev:web            # 啟動前端：http://localhost:3000
+npm install
+cp .env.example .env
+docker compose up -d db
+npm run db:migrate
+npm run dev:api
+npm run dev:web
 ```
+
+六行依序是：
+
+1. `npm install`：安裝套件
+2. `cp .env.example .env`：準備環境變數，再打開 `.env` 填值
+3. `docker compose up -d db`：用 Container 啟動練習資料庫（`-d`：在背景執行）
+4. `npm run db:migrate`：建立資料表
+5. `npm run dev:api`：啟動後端，網址是 http://localhost:4000
+6. `npm run dev:web`：啟動前端，網址是 http://localhost:3000
 
 - `.env` 只要自己填 `SESSION_SECRET`，其他值照範本。Mac 與 Git Bash 打 `openssl rand -hex 32`；PowerShell 打 `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`。把印出的那串文字貼到 `SESSION_SECRET=` 的後面。`.env` 不可以提交，也不要貼給任何人。
 - 資料庫第一次啟動要花幾秒準備：打 `docker compose ps`，STATUS 後面是 `(health: starting)` 就再打一次，等它變成 `(healthy)`，再執行 `npm run db:migrate`。太早執行會看到 `ECONNREFUSED` 或 `the database system is starting up`，等 10 秒再跑一次。
